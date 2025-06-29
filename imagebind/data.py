@@ -165,6 +165,55 @@ def load_and_transform_audio_data(
 
     return torch.stack(audio_outputs, dim=0)
 
+def load_and_transform_audio_wav(
+    audio_wavs,
+    device,
+    num_mel_bins=128,
+    target_length=204,
+    sample_rate=16000,
+    clip_duration=2,
+    clips_per_video=3,
+    mean=-4.268,
+    std=9.138,
+):
+    if audio_wavs is None:
+        return None
+
+    audio_outputs = []
+    clip_sampler = ConstantClipsPerVideoSampler(
+        clip_duration=clip_duration, clips_per_video=clips_per_video
+    )
+
+    for audio_wav in audio_wavs:
+        waveform = audio_wav
+        sr = 16000
+        if sample_rate != sr:
+            waveform = torchaudio.functional.resample(
+                waveform, orig_freq=sr, new_freq=sample_rate
+            )
+        all_clips_timepoints = get_clip_timepoints(
+            clip_sampler, waveform.size(1) / sample_rate
+        )
+        all_clips = []
+        for clip_timepoints in all_clips_timepoints:
+            waveform_clip = waveform[
+                :,
+                int(clip_timepoints[0] * sample_rate) : int(
+                    clip_timepoints[1] * sample_rate
+                ),
+            ]
+            waveform_melspec = waveform2melspec(
+                waveform_clip, sample_rate, num_mel_bins, target_length
+            )
+            all_clips.append(waveform_melspec)
+
+        normalize = transforms.Normalize(mean=mean, std=std)
+        all_clips = [normalize(ac).to(device) for ac in all_clips]
+
+        all_clips = torch.stack(all_clips, dim=0)
+        audio_outputs.append(all_clips)
+
+    return torch.stack(audio_outputs, dim=0)
 
 def crop_boxes(boxes, x_offset, y_offset):
     """
