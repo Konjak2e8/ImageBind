@@ -82,12 +82,19 @@ class MultimodalPairDataset(Dataset):
         self.shuffle = shuffle
         
         # 收集所有音频文件路径
+        # self.audio_dir = os.path.join(self.root_dir, "audio")
+        # self.video_dir = os.path.join(self.root_dir, "video")
+        
+        # audio_list_file = os.path.join(self.root_dir, "videos_1280*720.txt")
+        # with open(audio_list_file, 'r', encoding='utf-8') as f:
+        #     self.audio_paths = [os.path.join(self.audio_dir, line.strip() + ".wav") for line in f]
+
         self.audio_dir = os.path.join(self.root_dir, "audio")
         self.video_dir = os.path.join(self.root_dir, "video")
-        
-        audio_list_file = os.path.join(self.root_dir, "videos_1280*720.txt")
-        with open(audio_list_file, 'r', encoding='utf-8') as f:
-            self.audio_paths = [os.path.join(self.audio_dir, line.strip() + ".wav") for line in f]
+
+        import glob
+        # 直接读取 audio_dir 下所有 wav 文件路径
+        self.audio_paths = sorted(glob.glob(os.path.join(self.audio_dir, "*.wav")))
         
         if self.shuffle:
             random.shuffle(self.audio_paths)

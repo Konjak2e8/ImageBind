@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from imagebind.models.imagebind_model import imagebind_huge, ModalityType
-from imagebind.finetune.dataset_frames import MultimodalPairDataset, collate_fn
+from imagebind.finetune.dataset import MultimodalPairDataset, collate_fn
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 import utils
 import argparse
@@ -97,16 +97,16 @@ asr_processor = WhisperProcessor.from_pretrained("openai/whisper-small")
 asr_model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-small")
 
 dataset = MultimodalPairDataset(
-    root_dir="/root/autodl-tmp/datasets/VGGSOUND",
+    root_dir="/root/autodl-tmp/datasets/hf",
     modality_type=ModalityType.VISION,
     asr_model=asr_model,
     neg_ratio=1.0,
-    num_samples=12,
+    num_samples=100,
 )
 print("dataset created! start creating dataloader")
 dataloader = DataLoader(
     dataset,
-    batch_size=2,
+    batch_size=8,
     collate_fn=collate_fn,
     num_workers=1
 )
